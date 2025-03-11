@@ -8,6 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->group('api', function ($routes) {
     $routes->post('login', 'Api\AuthController::login');
+    $routes->post('register', 'Api\AuthController::register');
 
     $routes->get('users', 'Api\UserController::index');
     $routes->get('users/(:num)', 'Api\UserController::show/$1');
