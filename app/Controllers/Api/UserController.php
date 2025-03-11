@@ -15,6 +15,19 @@ class UserController extends BaseController {
         return json_decode($response, true);
     }
 
+    public function login() {
+        $data = $this->request->getJSON(true);
+        $users = $this->fetchExternalData();
+
+        foreach ($users['results'] as $user) {
+            if ($user['email'] == $data['email'] && $user['login']['uuid'] == $data['password']) {
+                return $this->respond(["token" => bin2hex(random_bytes(32))]);
+            }
+        }
+
+        return $this->failUnauthorized("Invalid credentials");
+    }
+
     public function searchByName($name) {
         $users = $this->fetchExternalData();
         $filtered = array_filter($users['results'], function ($user) use ($name) {
