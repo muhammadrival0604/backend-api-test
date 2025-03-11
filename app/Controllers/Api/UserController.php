@@ -7,46 +7,38 @@ use CodeIgniter\API\ResponseTrait;
 
 class UserController extends BaseController {
     use ResponseTrait;
-    protected $userModel;
 
-    public function __construct() {
-        $this->userModel = new UserModel();
-    }
+    private $apiUrl = "https://ogienurdiana.com/career/ecc694ce4e7f6e45a5a7912cde9fe131";
 
-    public function index() {
-        return $this->respond($this->userModel->getUser(), 200);
-    }
-
-    public function show($id) {
-        return $this->respond($this->userModel->getUser($id), 200);
-    }
-
-    public function create() {
-        $data = $this->request->getJSON(true);
-        $this->userModel->insert($data);
-        return $this->respondCreated(["message" => "User created"]);
-    }
-
-    public function update($id) {
-        $data = $this->request->getJSON(true);
-        $this->userModel->update($id, $data);
-        return $this->respond(["message" => "User updated"]);
-    }
-
-    public function delete($id) {
-        $this->userModel->delete($id);
-        return $this->respondDeleted(["message" => "User deleted"]);
+    private function fetchExternalData() {
+        $response = file_get_contents($this->apiUrl);
+        return json_decode($response, true);
     }
 
     public function searchByName($name) {
-        return $this->respond($this->userModel->searchByName($name));
+        $users = $this->fetchExternalData();
+        $filtered = array_filter($users['results'], function ($user) use ($name) {
+            return stripos($user['name']['first'] . " " . $user['name']['last'], $name) !== false;
+        });
+
+        return $this->respond(array_values($filtered));
     }
 
     public function searchByNIM($nim) {
-        return $this->respond($this->userModel->searchByNIM($nim));
+        $users = $this->fetchExternalData();
+        $filtered = array_filter($users['results'], function ($user) use ($nim) {
+            return $user['login']['uuid'] == $nim;
+        });
+
+        return $this->respond(array_values($filtered));
     }
 
     public function searchByYMD($ymd) {
-        return $this->respond($this->userModel->searchByYMD($ymd));
+        $users = $this->fetchExternalData();
+        $filtered = array_filter($users['results'], function ($user) use ($ymd) {
+            return date('Ymd', strtotime($user['dob']['date'])) == $ymd;
+        });
+
+        return $this->respond(array_values($filtered));
     }
 }
